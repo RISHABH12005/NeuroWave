@@ -37,10 +37,6 @@ The carrier tones are audible sound frequencies. The 10 Hz difference in this ex
 - Listen to continuous tones and stop playback when you choose, or select a timed session.
 - Use the visualizations and browser self-test to explore the experience.
 
-## Scientific limitations
-
-NeuroWave generates audio; it does **not** measure EEG, read brain activity, or confirm that a particular brainwave state has occurred. Research on binaural beats has mixed results, and effects may vary between people and settings. The tool is for audio exploration, not a medical treatment or a guaranteed method for changing brain activity.
-
 ## Run locally
 
 You need Node.js and npm for the project’s test commands. To serve the static app locally, you also need Python 3.
