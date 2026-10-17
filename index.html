@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Brain Wave Frequency Generator</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Instrument+Sans:wght@400;500;600&display=swap">
+<style>
+:root{
+  color-scheme:dark;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+  --bg:#0d1016; --panel:#151a23; --panel2:#1b212c; --line:#283040; --text:#e8ebf1; --muted:#9aa3b5;
+  --accent:#4fb5a5; --left:#6fa8e8; --right:#e8a76f;
+  --serif:"Fraunces",Georgia,"Times New Roman",serif;
+  --sans:"Instrument Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--text);font:400 16px/1.55 var(--sans)}
+.wrap{max-width:1040px;margin:0 auto;padding:28px 18px 56px}
+h1{font:700 clamp(28px,5vw,42px)/1.1 var(--serif);margin:0 0 10px;letter-spacing:-.01em}
+.lead{color:var(--muted);max-width:62ch;margin:0 0 22px}
+.notice{display:flex;gap:12px;background:var(--panel);border:1px solid var(--line);border-left:3px solid #d6a24f;border-radius:10px;padding:12px 14px;margin-bottom:22px;font-size:14.5px}
+.notice p{margin:0}
+.cards{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:18px}
+.card{all:unset;box-sizing:border-box;cursor:pointer;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 14px 12px;border-top:4px solid var(--c);transition:background .15s,border-color .15s}
+.card:hover{background:var(--panel2)}
+.card[aria-checked="true"]{background:var(--panel2);border-color:var(--c);box-shadow:0 0 0 1px var(--c)}
+.card:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid #fff;outline-offset:2px}
+.card b{display:block;font:700 19px var(--serif)}
+.card span{display:block;color:var(--muted);font-size:13.5px}
+.card .hz{color:var(--c);font-weight:600;margin-top:2px}
+.grid{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,6fr);gap:16px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px}
+.band-title{font:700 24px var(--serif);margin:0;color:var(--accent)}
+.band-desc{margin:2px 0 14px;color:var(--muted);font-size:14.5px}
+.big{font:700 clamp(42px,8vw,60px)/1 var(--serif);color:var(--accent);margin:6px 0 2px}
+.big small{font:500 18px var(--sans);color:var(--muted)}
+.ear{display:flex;gap:18px;font-size:14px;color:var(--muted);margin-bottom:16px;flex-wrap:wrap}
+.ear i{font-style:normal;font-weight:600}
+.ear .l i{color:var(--left)} .ear .r i{color:var(--right)}
+.field{margin:14px 0}
+.field label,.field .lab{display:flex;justify-content:space-between;align-items:baseline;font-size:14px;margin-bottom:6px;font-weight:500}
+.field output{color:var(--muted);font-weight:400}
+input[type=range]{width:100%;accent-color:var(--accent);height:28px;margin:0}
+.row{display:flex;gap:10px;align-items:center}
+input[type=number],select{background:var(--bg);color:var(--text);border:1px solid var(--line);border-radius:8px;padding:8px 10px;font:inherit;width:100%}
+input[type=number]{width:96px}
+.err{color:#ff8f8f;font-size:13px;min-height:19px;margin:4px 0 0}
+.btns{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:6px}
+button.act{font:600 15px var(--sans);color:var(--text);background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:12px 6px;cursor:pointer;min-height:46px}
+button.act:hover:not(:disabled){border-color:var(--accent)}
+button.act.primary{background:var(--accent);color:#0a0d12;border-color:var(--accent)}
+button.act:disabled{opacity:.4;cursor:not-allowed}
+.status{display:flex;align-items:center;gap:10px;margin-bottom:12px;font-weight:500}
+.dot{width:11px;height:11px;border-radius:50%;background:#566077;flex:none}
+.dot.on{background:var(--accent);box-shadow:0 0 0 0 var(--accent);animation:pulse 1.4s infinite}
+.dot.pause{background:#d6a24f}
+@keyframes pulse{70%{box-shadow:0 0 0 9px transparent}100%{box-shadow:0 0 0 0 transparent}}
+@media (prefers-reduced-motion:reduce){.dot.on{animation:none}}
+.timer{display:flex;gap:22px;font-variant-numeric:tabular-nums;color:var(--muted);font-size:14px;margin-bottom:6px;flex-wrap:wrap}
+.timer b{color:var(--text);font-size:20px;font-weight:600;margin-left:6px}
+.bar{height:5px;background:var(--bg);border-radius:3px;overflow:hidden;margin-bottom:14px}
+.bar div{height:100%;width:0;background:var(--accent)}
+canvas{width:100%;display:block;background:var(--bg);border:1px solid var(--line);border-radius:10px}
+.cap{font-size:13px;color:var(--muted);margin:6px 0 12px}
+.cap i{font-style:normal;font-weight:600}
+details{margin-top:18px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 16px}
+summary{cursor:pointer;font-weight:600}
+details ol{padding-left:20px;color:var(--muted);font-size:14.5px}
+pre{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:10px;font-size:12.5px;overflow-x:auto;max-width:100%;margin:10px 0 0;min-height:44px;white-space:pre}
+.small{font-size:13.5px;color:var(--muted);margin-top:18px}
+@media (max-width:860px){.cards{grid-template-columns:repeat(2,1fr)}.card:last-child{grid-column:span 2}.grid{grid-template-columns:1fr}}
+@media (max-width:420px){.btns{grid-template-columns:repeat(2,1fr)}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Brain wave frequency generator</h1>
+  <p class="lead">Pick a band, set a beat frequency, and listen to a binaural beat generated live in your browser. Nothing is downloaded or recorded.</p>
+
+  <div class="notice" role="note">
+    <p><strong>Use stereo headphones.</strong> A binaural beat needs a different tone in each ear; through speakers the two tones mix in the air and the effect is lost. Keep the volume low and comfortable, and don’t listen while driving or doing anything that needs your full attention. Binaural beats are an audio experience, not a proven treatment, and they do not reliably change brain activity, sleep, focus, meditation or memory. The bands below are approximate EEG ranges, not guaranteed mental states.</p>
+  </div>
+
+  <div class="cards" role="radiogroup" aria-label="Brain wave band" id="cards"></div>
+
+  <div class="grid">
+    <section class="panel" aria-label="Controls">
+      <h2 class="band-title" id="bName"></h2>
+      <p class="band-desc" id="bDesc"></p>
+      <div class="big" aria-live="polite"><span id="beatOut">0</span> <small>Hz beat</small></div>
+      <div class="ear"><span class="l"><i>Left ear</i> <span id="lHz"></span> Hz</span><span class="r"><i>Right ear</i> <span id="rHz"></span> Hz</span></div>
+
+      <div class="field">
+        <label for="beat">Target beat frequency <output id="beatRange"></output></label>
+        <div class="row">
+          <input type="range" id="beat" step="0.1" aria-describedby="beatErr">
+          <input type="number" id="beatNum" step="0.1" aria-label="Beat frequency in Hz">
+        </div>
+        <p class="err" id="beatErr" role="alert"></p>
+      </div>
+      <div class="field">
+        <label for="carrier">Carrier frequency <output id="carOut">200 Hz</output></label>
+        <input type="range" id="carrier" min="100" max="500" step="1" value="200">
+      </div>
+      <div class="field">
+        <label for="vol">Volume <output id="volOut">25%</output></label>
+        <input type="range" id="vol" min="0" max="100" step="1" value="25">
+      </div>
+      <div class="field">
+        <label for="dur">Session length</label>
+        <select id="dur">
+          <option value="300">5 minutes</option><option value="600">10 minutes</option>
+          <option value="900" selected>15 minutes</option><option value="1200">20 minutes</option>
+          <option value="1800">30 minutes</option><option value="3600">60 minutes</option>
+          <option value="0">No limit</option>
+        </select>
+      </div>
+    </section>
+
+    <section class="panel" aria-label="Playback and visualization">
+      <div class="status"><span class="dot" id="dot"></span><span id="statusTxt" role="status" aria-live="polite">Stopped</span></div>
+      <div class="timer"><span>Elapsed<b id="tEl">0:00</b></span><span>Remaining<b id="tRem">15:00</b></span></div>
+      <div class="bar" aria-hidden="true"><div id="prog"></div></div>
+      <div class="btns">
+        <button class="act primary" id="bPlay">Play</button>
+        <button class="act" id="bPause" disabled>Pause</button>
+        <button class="act" id="bResume" disabled>Resume</button>
+        <button class="act" id="bStop" disabled>Stop</button>
+      </div>
+      <p class="err" id="audioErr" role="alert"></p>
+      <p class="cap"><i style="color:var(--left)">Left</i> and <i style="color:var(--right)">right</i> channel tones (live from the audio graph)</p>
+      <canvas id="wave" height="170" aria-label="Left and right channel waveforms"></canvas>
+      <p class="cap">Beat envelope: how loudness swells and fades at the beat rate (illustration of the two tones adding together)</p>
+      <canvas id="env" height="110" aria-label="Beat envelope"></canvas>
+    </section>
+  </div>
+
+  <details>
+    <summary>Testing instructions and self-test</summary>
+    <ol>
+      <li>Press <b>Run self-test</b>. It renders every band at its lowest, middle and highest beat frequency offline, measures each channel’s frequency, and checks left = carrier and right = carrier + beat.</li>
+      <li>By ear: wear stereo headphones, play Alpha at 10 Hz with a 200 Hz carrier, and cover one ear. You should hear one steady tone; with both ears you should hear a slow pulsing.</li>
+      <li>Channel check: the readouts above show the exact left and right frequencies. Swap headphones left/right and the tone you hear in each ear should swap.</li>
+      <li>Cleanup: start playback, then switch bands, press Stop, or close the tab. Sound fades out and stops each time. In Chrome you can confirm in <code>chrome://media-internals</code> that the audio context is closed.</li>
+    </ol>
+    <button class="act" id="bTest" style="padding:10px 16px">Run self-test</button>
+    <pre id="testOut" aria-live="polite">Results appear here.</pre>
+  </details>
+
+  <p class="small">Everything runs locally with the Web Audio API: two sine oscillators, one per channel, joined through a channel merger so left and right stay separate. Frequencies below about 20 Hz aren’t heard as tones, so each beat is made from two audible carrier tones whose difference equals the target frequency.</p>
+</div>
+
+<script>
+(function(){
+'use strict';
+var BANDS=[
+ {id:'delta',name:'Delta',min:0.5,max:4,def:2,color:'#6c86d9',desc:'Associated with deep sleep.'},
+ {id:'theta',name:'Theta',min:4,max:8,def:6,color:'#a283d6',desc:'Associated with drowsiness and some memory processes.'},
+ {id:'alpha',name:'Alpha',min:8,max:13,def:10,color:'#4fb5a5',desc:'Associated with relaxed wakefulness.'},
+ {id:'beta',name:'Beta',min:13,max:30,def:20,color:'#d6a24f',desc:'Associated with alertness and active thinking.'},
+ {id:'gamma',name:'Gamma',min:30,max:100,def:40,color:'#d9707f',desc:'Associated with attention and information processing.'}
+];
+var FADE=1.5, MAXGAIN=0.5;
+var $=function(id){return document.getElementById(id)};
+var band=BANDS[2], beat=band.def, carrier=200, volume=25;
+var state='idle'; // idle | playing | paused | stopping
+var s=null; // audio session {ctx,nodes}
+var elapsed=0, lastTick=0, pauseTimer=null, stopTimer=null;
+
+// ---------- UI setup ----------
+var cardsEl=$('cards');
+BANDS.forEach(function(b){
+  var el=document.createElement('button');
+  el.className='card'; el.setAttribute('role','radio'); el.dataset.id=b.id;
+  el.style.setProperty('--c',b.color);
+  el.innerHTML='<b>'+b.name+'</b><span class="hz">'+b.min+'–'+b.max+' Hz</span><span>'+b.desc.replace('Associated with ','')+'</span>';
+  el.addEventListener('click',function(){selectBand(b)});
+  cardsEl.appendChild(el);
+});
+function fmt(n){return (Math.round(n*10)/10).toString()}
+function mmss(sec){sec=Math.max(0,Math.floor(sec));return Math.floor(sec/60)+':'+String(sec%60).padStart(2,'0')}
+function pretty(n){return Number.isInteger(n)?String(n):n.toFixed(1)}
+
+function selectBand(b){
+  if(b===band)return;
+  if(state!=='idle')hardStop(); // switching bands always stops audio safely
+  band=b; beat=b.def; renderBand();
+}
+function renderBand(){
+  document.documentElement.style.setProperty('--accent',band.color);
+  [].forEach.call(cardsEl.children,function(c){c.setAttribute('aria-checked',c.dataset.id===band.id)});
+  $('bName').textContent=band.name+' band';
+  $('bDesc').textContent=band.desc+' Approximate EEG range, not a guaranteed mental state.';
+  var r=$('beat'); r.min=band.min; r.max=band.max; r.value=beat;
+  var n=$('beatNum'); n.min=band.min; n.max=band.max; n.value=pretty(beat);
+  $('beatRange').textContent=band.min+'–'+band.max+' Hz';
+  $('beatErr').textContent='';
+  readouts();
+}
+function readouts(){
+  $('beatOut').textContent=pretty(beat);
+  $('lHz').textContent=pretty(carrier);
+  $('rHz').textContent=pretty(carrier+beat);
+  $('carOut').textContent=carrier+' Hz';
+  $('volOut').textContent=volume+'%';
+}
+
+function setBeat(v,fromText){
+  var x=Math.round(v*10)/10;
+  if(!isFinite(x)||x<band.min||x>band.max){
+    $('beatErr').textContent='Enter a value from '+band.min+' to '+band.max+' Hz for the '+band.name+' band.';
+    $('beatNum').value=pretty(beat); $('beat').value=beat; return;
+  }
+  $('beatErr').textContent=''; beat=x;
+  $('beat').value=x; if(fromText||true)$('beatNum').value=pretty(x);
+  readouts(); applyFreqs();
+}
+$('beat').addEventListener('input',function(e){setBeat(parseFloat(e.target.value))});
+$('beatNum').addEventListener('change',function(e){
+  var raw=e.target.value.trim();
+  setBeat(raw===''?NaN:Number(raw),true);
+});
+$('carrier').addEventListener('input',function(e){carrier=parseInt(e.target.value,10);readouts();applyFreqs()});
+$('vol').addEventListener('input',function(e){volume=parseInt(e.target.value,10);readouts();applyVolume()});
+$('dur').addEventListener('change',function(){updateTimer()});
+
+// ---------- Audio ----------
+function buildGraph(ctx,dest,car,bt){
+  var merger=ctx.createChannelMerger(2);
+  merger.channelInterpretation='discrete';
+  var oL=ctx.createOscillator(), oR=ctx.createOscillator();
+  oL.type='sine'; oR.type='sine';
+  oL.frequency.value=car; oR.frequency.value=car+bt; // left = carrier, right = carrier + beat
+  var gL=ctx.createGain(), gR=ctx.createGain(); gL.gain.value=1; gR.gain.value=1;
+  var master=ctx.createGain(); master.gain.value=0;
+  var aL=ctx.createAnalyser(), aR=ctx.createAnalyser(); aL.fftSize=2048; aR.fftSize=2048;
+  oL.connect(gL); gL.connect(aL); aL.connect(merger,0,0);   // merger input 0 = left channel
+  oR.connect(gR); gR.connect(aR); aR.connect(merger,0,1);   // merger input 1 = right channel
+  merger.connect(master); master.connect(dest);
+  return {oL:oL,oR:oR,gL:gL,gR:gR,master:master,aL:aL,aR:aR,merger:merger};
+}
+function targetGain(){return (volume/100)*MAXGAIN}
+function ramp(param,ctx,value,dur){
+  var t=ctx.currentTime;
+  param.cancelScheduledValues(t);
+  param.setValueAtTime(param.value,t);
+  param.linearRampToValueAtTime(value,t+dur);
+}
+function applyFreqs(){
+  if(!s)return; var t=s.ctx.currentTime;
+  s.n.oL.frequency.setTargetAtTime(carrier,t,0.05);
+  s.n.oR.frequency.setTargetAtTime(carrier+beat,t,0.05);
+}
+function applyVolume(){
+  if(!s||state!=='playing')return;
+  s.n.master.gain.setTargetAtTime(targetGain(),s.ctx.currentTime,0.05);
+}
+function teardown(){
+  clearTimeout(pauseTimer); clearTimeout(stopTimer);
+  if(!s)return; var old=s; s=null;
+  try{old.n.oL.stop()}catch(e){} try{old.n.oR.stop()}catch(e){}
+  try{old.n.master.disconnect();old.n.merger.disconnect()}catch(e){}
+  try{old.ctx.close()}catch(e){}
+}
+function showErr(m){$('audioErr').textContent=m||''}
+
+async function play(){
+  if(state!=='idle')return; // prevents overlapping sessions
+  showErr('');
+  var AC=window.AudioContext||window.webkitAudioContext;
+  if(!AC){showErr('This browser doesn’t support the Web Audio API. Try a recent Chrome, Edge, Firefox or Safari.');return}
+  try{
+    var ctx=new AC();
+    s={ctx:ctx,n:null};
+    if(ctx.state==='suspended')await ctx.resume(); // needs the user gesture that triggered Play
+    if(ctx.state!=='running'){throw new Error('blocked')}
+    s.n=buildGraph(ctx,ctx.destination,carrier,beat);
+    s.n.oL.start(); s.n.oR.start();
+    ramp(s.n.master.gain,ctx,targetGain(),FADE);
+    elapsed=0; lastTick=performance.now(); state='playing';
+    updateUI();
+  }catch(err){
+    teardown(); state='idle'; updateUI();
+    showErr(err&&err.message==='blocked'
+      ?'Your browser blocked audio. Press Play again, and check that the tab isn’t muted.'
+      :'Couldn’t start audio: '+(err&&err.message?err.message:err));
+  }
+}
+function pause(){
+  if(state!=='playing'||!s)return;
+  state='paused'; ramp(s.n.master.gain,s.ctx,0,0.4);
+  var c=s.ctx; pauseTimer=setTimeout(function(){if(state==='paused'&&s&&s.ctx===c)c.suspend()},500);
+  updateUI();
+}
+async function resume(){
+  if(state!=='paused'||!s)return;
+  clearTimeout(pauseTimer);
+  try{await s.ctx.resume()}catch(e){showErr('Couldn’t resume audio.');return}
+  ramp(s.n.master.gain,s.ctx,targetGain(),0.6);
+  lastTick=performance.now(); state='playing'; updateUI();
+}
+function stop(){
+  if(state!=='playing'&&state!=='paused')return;
+  if(!s){state='idle';updateUI();return}
+  state='stopping'; updateUI(); clearTimeout(pauseTimer);
+  var c=s.ctx;
+  (async function(){
+    try{if(c.state==='suspended')await c.resume()}catch(e){}
+    if(!s||s.ctx!==c)return;
+    ramp(s.n.master.gain,c,0,FADE);
+    stopTimer=setTimeout(function(){teardown();state='idle';elapsed=0;updateUI()},FADE*1000+120);
+  })();
+}
+function hardStop(){ // immediate, used for band switches and page exit
+  teardown(); state='idle'; elapsed=0; showErr(''); updateUI();
+}
+window.addEventListener('pagehide',teardown);
+window.addEventListener('beforeunload',teardown);
+
+$('bPlay').addEventListener('click',play);
+$('bPause').addEventListener('click',pause);
+$('bResume').addEventListener('click',resume);
+$('bStop').addEventListener('click',stop);
+
+// ---------- Status / timer ----------
+function updateUI(){
+  var st=state;
+  $('bPlay').disabled=st!=='idle';
+  $('bPause').disabled=st!=='playing';
+  $('bResume').disabled=st!=='paused';
+  $('bStop').disabled=!(st==='playing'||st==='paused');
+  $('dur').disabled=st!=='idle';
+  var dot=$('dot'); dot.className='dot'+(st==='playing'?' on':st==='paused'?' pause':'');
+  $('statusTxt').textContent=st==='playing'?'Playing '+band.name+' · '+pretty(beat)+' Hz beat':
+    st==='paused'?'Paused':st==='stopping'?'Fading out…':'Stopped';
+  updateTimer();
+}
+function updateTimer(){
+  var d=parseInt($('dur').value,10);
+  $('tEl').textContent=mmss(elapsed);
+  $('tRem').textContent=d?mmss(d-elapsed):'No limit';
+  $('prog').style.width=d?Math.min(100,elapsed/d*100)+'%':'0%';
+}
+setInterval(function(){
+  if(state==='playing'){
+    var now=performance.now(); elapsed+=(now-lastTick)/1000; lastTick=now;
+    var d=parseInt($('dur').value,10);
+    if(d&&elapsed>=d){elapsed=d;stop()}
+    updateTimer(); $('statusTxt').textContent='Playing '+band.name+' · '+pretty(beat)+' Hz beat';
+  }
+},250);
+
+// ---------- Visualization ----------
+var wave=$('wave'), env=$('env');
+function fit(c){
+  var r=c.getBoundingClientRect(), dpr=window.devicePixelRatio||1;
+  var h=parseInt(c.getAttribute('height'),10);
+  if(c.width!==Math.round(r.width*dpr)){c.width=Math.round(r.width*dpr);c.height=Math.round(h*dpr)}
+  return dpr;
+}
+function drawWave(){
+  var dpr=fit(wave), g=wave.getContext('2d'), W=wave.width, H=wave.height;
+  g.clearRect(0,0,W,H);
+  var lanes=[{y:H*0.27,col:'#6fa8e8',an:s&&s.n&&s.n.aL,f:carrier},{y:H*0.73,col:'#e8a76f',an:s&&s.n&&s.n.aR,f:carrier+beat}];
+  lanes.forEach(function(L,i){
+    g.strokeStyle='#283040'; g.lineWidth=1*dpr; g.beginPath(); g.moveTo(0,L.y); g.lineTo(W,L.y); g.stroke();
+    g.strokeStyle=L.col; g.lineWidth=2*dpr; g.beginPath();
+    var amp=H*0.21, live=L.an&&state==='playing', buf;
+    if(live){buf=new Float32Array(L.an.fftSize);L.an.getFloatTimeDomainData(buf)}
+    // find a rising zero crossing so the trace holds still
+    var start=0;
+    if(live){for(var k=1;k<buf.length/2;k++){if(buf[k-1]<0&&buf[k]>=0){start=k;break}}}
+    var cycles=3;
+    for(var x=0;x<=W;x+=2){
+      var y;
+      if(live){var idx=start+Math.floor(x/W*(L.an.context.sampleRate/L.f)*cycles);y=(buf[idx]||0)*2.2}
+      else{y=Math.sin(x/W*cycles*2*Math.PI)*(state==='paused'?0.4:0.5)}
+      var py=L.y-y*amp;
+      x?g.lineTo(x,py):g.moveTo(x,py);
+    }
+    g.stroke();
+  });
+}
+function drawEnv(){
+  var dpr=fit(env), g=env.getContext('2d'), W=env.width, H=env.height;
+  g.clearRect(0,0,W,H);
+  var winSec=Math.max(2,Math.min(4,6/beat)); // show a few beat cycles
+  var t0=(state==='playing'||state==='paused')?(elapsed):0;
+  var mid=H/2, amp=H*0.4;
+  g.strokeStyle='#283040'; g.lineWidth=dpr; g.beginPath(); g.moveTo(0,mid); g.lineTo(W,mid); g.stroke();
+  var fillCol=getComputedStyle(document.documentElement).getPropertyValue('--accent').trim();
+  g.strokeStyle=fillCol; g.lineWidth=2*dpr; g.beginPath();
+  var top=[],bot=[];
+  for(var x=0;x<=W;x+=2){
+    var t=t0-winSec+(x/W)*winSec; // scrolls right to left while playing
+    var e=Math.abs(Math.cos(Math.PI*beat*t));
+    top.push([x,mid-e*amp]); bot.push([x,mid+e*amp]);
+  }
+  top.forEach(function(p,i){i?g.lineTo(p[0],p[1]):g.moveTo(p[0],p[1])}); g.stroke();
+  g.beginPath(); bot.forEach(function(p,i){i?g.lineTo(p[0],p[1]):g.moveTo(p[0],p[1])}); g.stroke();
+  g.fillStyle='#e8ebf1'; g.beginPath(); g.arc(W-8*dpr,mid-Math.abs(Math.cos(Math.PI*beat*t0))*amp,4*dpr,0,7); g.fill();
+}
+function loop(){drawWave();drawEnv();requestAnimationFrame(loop)}
+
+// ---------- Self-test ----------
+function crossFreq(d,sr){
+  var first=null,last=null,n=0;
+  for(var i=1;i<d.length;i++){
+    if(d[i-1]<0&&d[i]>=0){
+      var t=(i-1+(-d[i-1])/(d[i]-d[i-1]))/sr;
+      if(first===null)first=t; last=t; n++;
+    }
+  }
+  return n>2?(n-1)/(last-first):NaN;
+}
+$('bTest').addEventListener('click',async function(){
+  var out=$('testOut'), btn=this; btn.disabled=true;
+  var OAC=window.OfflineAudioContext||window.webkitOfflineAudioContext;
+  if(!OAC){out.textContent='OfflineAudioContext isn’t available in this browser.';btn.disabled=false;return}
+  var lines=['Carrier '+carrier+' Hz','band   beat   left(meas)  right(meas)  diff    result'], allOk=true;
+  try{
+    for(var b=0;b<BANDS.length;b++){
+      var B=BANDS[b], pts=[B.min,Math.round((B.min+B.max)/2*10)/10,B.max];
+      for(var p=0;p<pts.length;p++){
+        var sr=44100, ctx=new OAC(2,sr*4,sr), n=buildGraph(ctx,ctx.destination,carrier,pts[p]);
+        n.master.gain.value=1; n.oL.start(); n.oR.start();
+        var buf=await ctx.startRendering();
+        var fl=crossFreq(buf.getChannelData(0),sr), fr=crossFreq(buf.getChannelData(1),sr), df=fr-fl;
+        var ok=Math.abs(fl-carrier)<0.05&&Math.abs(fr-(carrier+pts[p]))<0.05&&Math.abs(df-pts[p])<0.05;
+        if(!ok)allOk=false;
+        lines.push((B.name+'      ').slice(0,7)+(pts[p]+'       ').slice(0,7)+(fl.toFixed(2)+'        ').slice(0,12)+(fr.toFixed(2)+'         ').slice(0,13)+(df.toFixed(2)+'    ').slice(0,8)+(ok?'pass':'FAIL'));
+      }
+    }
+    lines.push(allOk?'All checks passed: left = carrier, right = carrier + beat.':'Some checks failed.');
+  }catch(e){lines.push('Test error: '+e.message)}
+  out.textContent=lines.join('\n'); btn.disabled=false;
+});
+
+renderBand(); updateUI(); requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>
