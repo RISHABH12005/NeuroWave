@@ -1,77 +1,90 @@
 # NeuroWave
 
-NeuroWave is a browser-based binaural-beat generator for the five commonly described EEG frequency bands. It generates stereo sine tones locally with the **Web Audio API**—no prerecorded audio, external audio API, or frontend build step is required.
+NeuroWave is a free, browser-based binaural tone generator. Choose a frequency band, adjust the sound, and listen through stereo headphones. Audio is generated in your browser using the Web Audio API.
 
-> **Important:** NeuroWave is an audio tool, not a medical device or treatment. Binaural beats do not guarantee changes in brain activity or improvements in sleep, focus, meditation, or memory.
+**Playback is continuous by default:** it has no time limit and keeps playing until you press **Stop**. The tones do not intentionally pulse on and off. You can pause and resume playback whenever you want.
+
+> **Please note:** NeuroWave is an audio experiment, not a medical device or treatment. Binaural beats are not guaranteed to change brain activity or improve sleep, focus, memory, or mood.
 
 ## Features
 
-- Delta, Theta, Alpha, Beta, and Gamma band presets with adjustable beat and carrier frequencies.
-- Stereo binaural audio generated in real time by the browser.
-- Play, pause, resume, and stop controls, plus a playback timer.
-- Smooth volume and frequency transitions.
-- Audio visualizations and a browser-based self-test.
-- Responsive static web app that can be hosted on a service such as Render.
+- Five selectable frequency bands: Delta, Theta, Alpha, Beta, and Gamma.
+- Adjustable beat frequency, carrier frequency, and volume.
+- Continuous stereo audio with Play, Pause, Resume, and Stop controls.
+- Optional session timer, or **No limit** for playback without an automatic time limit.
+- Waveform visualizations and an in-browser audio self-test.
+- Runs in a modern browser without downloading audio files.
 
-## Run locally
+## Try it locally
 
-Requirements: a current browser with Web Audio API support, and Python 3 or Node.js for the optional local server.
+### Requirements
+
+- A modern browser such as Chrome, Edge, Firefox, or Safari.
+- Python 3 to run the local server, or Node.js if you want to use the included npm scripts and tests.
+- Stereo headphones for the intended binaural listening experience.
+
+### Steps
 
 ```bash
 git clone https://github.com/RISHABH12005/NeuroWave.git
 cd NeuroWave
-
-# Option A
-python3 -m http.server 8000
-
-# Option B, if Python 3 is installed
+npm ci
 npm start
 ```
 
-Open [http://localhost:8000](http://localhost:8000). The app files are in `public/`; the local server serves that directory at the site root. Press **Play** to start audio; browsers generally require a user gesture before audio can play.
+Open [http://localhost:8000](http://localhost:8000) in your browser and press **Play**. If you only want to run the site and have Python 3 installed, you can instead run:
 
-On Windows, if `python3` is unavailable, try `py -m http.server 8000`.
+```bash
+python3 -m http.server 8000 --directory public
+```
 
-## Frequency bands
+On Windows, use `py -m http.server 8000 --directory public` if `python3` is not recognized.
 
-The following are approximate categories; definitions vary across references and EEG conventions.
+## Understanding the frequencies
 
-| Band | Range (Hz) | Commonly associated with |
+| Band | Approximate range | Common EEG association |
 |---|---:|---|
-| Delta | 0.5–4 | Deep sleep |
-| Theta | 4–8 | Drowsiness and some memory processes |
-| Alpha | 8–13 | Relaxed wakefulness |
-| Beta | 13–30 | Alertness and active thinking |
-| Gamma | 30–100 | Attention and information processing |
+| Delta | 0.5–4 Hz | Deep sleep |
+| Theta | 4–8 Hz | Drowsiness and some memory processes |
+| Alpha | 8–13 Hz | Relaxed wakefulness |
+| Beta | 13–30 Hz | Alertness and active thinking |
+| Gamma | 30–100 Hz | Attention and information processing |
 
-These associations are general descriptions, not effects that listening to a sound is proven to produce.
+EEG ranges vary by source and can overlap. These associations describe common EEG terminology; they do not mean listening to a matching sound will cause that mental state.
 
-### Gamma and high beat frequencies
+## How the sound works
 
-A high EEG gamma frequency is not the same thing as a clearly perceived binaural beat. Differences above roughly 30 Hz may not be perceived as a distinct binaural beat by many listeners. NeuroWave treats beat differences above 30 Hz as an experimental high-difference mode that requires explicit enabling. This does not mean the audio induces a gamma brain state.
+NeuroWave plays a slightly different tone in each ear:
 
-## How the audio works
+- **Left ear:** the selected carrier frequency.
+- **Right ear:** carrier frequency plus the selected beat frequency.
+- **Beat difference:** right frequency minus left frequency.
 
-- The left channel plays the carrier tone.
-- The right channel plays the carrier tone plus the selected beat difference.
-- The perceived beat frequency is the difference between the right and left channel frequencies.
-- Separate oscillators, gain nodes, and analysers feed a stereo `ChannelMerger`; the channels are not intentionally mixed to mono.
-- Playback uses short fade-in and fade-out ramps. Volume and frequency adjustments are ramped smoothly.
+For example, a 200 Hz left tone and a 210 Hz right tone have a 10 Hz difference. The audio is generated continuously, and the sine waves naturally repeat their cycles. The app does not add intentional on/off pulses or automatic frequency sweeps.
 
-**Use stereo headphones.** Speakers or mono playback may mix the two channels and reduce the intended effect.
+Use stereo headphones at a comfortable, low volume. A difference above about 30 Hz may not be perceived as a clear binaural beat; Gamma's EEG range should not be interpreted as a promise of a Gamma brain state.
 
-## Project structure
+## Repository layout
 
-- `public/index.html` — interface and visualizations.
-- `public/engine.js` — frequency-band data, Web Audio graph, playback session logic, and audio measurements.
-- `tests/engine.test.js` — automated engine tests.
-- `tests/ui-smoke.js` — DOM smoke test.
-- `render.yaml` — Render Blueprint configuration for publishing the static site.
-- `.github/workflows/ci.yml` — GitHub Actions workflow for automated checks.
+```text
+NeuroWave/
+├── public/
+│   ├── index.html       # Web interface and visualizations
+│   └── engine.js        # Audio engine and playback controls
+├── tests/
+│   ├── engine.test.js   # Audio and playback tests
+│   └── ui-smoke.js      # Basic interface smoke test
+├── .github/workflows/
+│   └── ci.yml           # Automated GitHub Actions checks
+├── .gitignore
+├── LICENSE
+├── README.md
+├── package.json
+├── package-lock.json
+└── render.yaml           # Render static-site configuration
+```
 
-## Tests
-
-Install the project dependencies and run:
+## Run the tests
 
 ```bash
 npm ci
@@ -79,34 +92,26 @@ npm test
 npm run test:ui
 ```
 
-The test suite includes frequency calculations, channel-isolation checks, playback lifecycle scenarios, and a DOM smoke test. The Node-based audio tests use `node-web-audio-api`; they do not replace listening tests in real browsers.
+You can also open the website, expand **Testing instructions and self-test**, and click **Run self-test**. Automated tests are useful checks, but they do not replace testing audio output on real devices and browsers.
 
-You can also open the page, expand **Testing instructions and self-test**, and select **Run self-test** to test the audio engine available in your browser.
+## Deploy with Render
 
-### Current verification limits
+This repository includes a `render.yaml` Blueprint configured to publish the `public/` directory as a static site.
 
-- Browser audio output, autoplay behavior, mobile interruptions, and Safari behavior should be checked manually on target devices.
-- Automated tests using simulated contexts or DOM environments cannot fully reproduce every browser's audio behavior.
-- Perception of binaural beats varies by listener, especially at higher beat frequencies.
+1. In Render, choose **New + → Blueprint**.
+2. Connect `RISHABH12005/NeuroWave` and select the `main` branch.
+3. Set the Blueprint path to `render.yaml` if asked.
+4. Deploy and open the URL Render provides.
 
-## Deploy on Render
+If the Render service is already connected to this repository with automatic deploys enabled, new commits to the linked branch should trigger a deployment. Confirm the deployment status in Render before assuming the live site has updated.
 
-The repository includes a root-level `render.yaml` Blueprint for a static site named `neurowave`.
+## Safety and limitations
 
-1. Push the repository to GitHub.
-2. In Render, choose **New + → Blueprint** and connect `RISHABH12005/NeuroWave`.
-3. Select the `main` branch and set **Blueprint Path** to `render.yaml`.
-4. Deploy the Blueprint and open the service URL provided by Render.
-
-The configuration publishes the `public/` directory as static files. A successful GitHub commit or Blueprint setup alone does not guarantee the deployment or tests have succeeded; check the latest Render deployment and GitHub Actions run for their actual status.
-
-## Safety
-
-- Use stereo headphones at a low, comfortable volume.
-- Stop playback if you experience discomfort.
+- Keep the volume low and comfortable; stop if you feel discomfort.
 - Do not listen while driving or doing tasks that require full attention.
-- Do not use NeuroWave as a substitute for medical advice or treatment.
+- Browser audio behavior can vary, especially on mobile devices and during interruptions.
+- NeuroWave does not measure EEG and cannot verify that a listener's brain enters any particular state.
 
 ## License
 
-MIT — see [LICENSE](LICENSE).
+This project is released under the MIT License. See [LICENSE](LICENSE).
