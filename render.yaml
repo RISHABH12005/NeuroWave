@@ -3,5 +3,5 @@ services:
     name: neurowave
     runtime: static
     buildCommand: echo "Publishing NeuroWave static files"
-    staticPublishPath: .
+    staticPublishPath: public
     pullRequestPreviewsEnabled: true
