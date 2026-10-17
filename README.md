@@ -1,75 +1,112 @@
 # NeuroWave
 
-A browser-based binaural-beat generator for the five EEG bands. It uses only the Web Audio API: no audio files, no external audio services, no build step.
+NeuroWave is a browser-based binaural-beat generator for the five commonly described EEG frequency bands. It generates stereo sine tones locally with the **Web Audio API**—no prerecorded audio, external audio API, or frontend build step is required.
 
-**Not a treatment.** Binaural beats are an audio experience. This tool does not claim to change brain activity or to guarantee sleep, focus, meditation or better memory.
+> **Important:** NeuroWave is an audio tool, not a medical device or treatment. Binaural beats do not guarantee changes in brain activity or improvements in sleep, focus, meditation, or memory.
 
-## Run it
+## Features
+
+- Delta, Theta, Alpha, Beta, and Gamma band presets with adjustable beat and carrier frequencies.
+- Stereo binaural audio generated in real time by the browser.
+- Play, pause, resume, and stop controls, plus a playback timer.
+- Smooth volume and frequency transitions.
+- Audio visualizations and a browser-based self-test.
+- Responsive static web app that can be hosted on a service such as Render.
+
+## Run locally
+
+Requirements: a current browser with Web Audio API support, and Python 3 or Node.js for the optional local server.
 
 ```bash
-python3 -m http.server 8000     # or: npm start
-# open http://localhost:8000
+git clone https://github.com/RISHABH12005/NeuroWave.git
+cd NeuroWave
+
+# Option A
+python3 -m http.server 8000
+
+# Option B, if Python 3 is installed
+npm start
 ```
 
-`index.html` loads `engine.js`, so serve the folder (or open `index.html` directly; both files must sit together). Click **Play**: browsers only start audio after a user click.
+Open [http://localhost:8000](http://localhost:8000). Keep `index.html` and `engine.js` in the same directory. Press **Play** to start audio; browsers generally require a user gesture before audio can play.
 
-**Browsers:** a current Chrome, Edge, Firefox or Safari with Web Audio and `OfflineAudioContext`. Use stereo headphones.
+On Windows, if `python3` is unavailable, try `py -m http.server 8000`.
 
 ## Frequency bands
 
-| Band | Range (Hz) | General association |
-|---|---|---|
-| Delta | 0.5–4 | deep sleep |
-| Theta | 4–8 | drowsiness, some memory processes |
-| Alpha | 8–13 | relaxed wakefulness |
-| Beta | 13–30 | alertness, active thinking |
-| Gamma | 30–100 | attention, information processing |
+The following are approximate categories; definitions vary across references and EEG conventions.
 
-These are approximate. EEG band boundaries overlap and vary by convention (for example, some sources use 4–7 Hz for theta, 8–12 Hz for alpha, or start gamma near 25 Hz). The ranges are kept as listed.
+| Band | Range (Hz) | Commonly associated with |
+|---|---:|---|
+| Delta | 0.5–4 | Deep sleep |
+| Theta | 4–8 | Drowsiness and some memory processes |
+| Alpha | 8–13 | Relaxed wakefulness |
+| Beta | 13–30 | Alertness and active thinking |
+| Gamma | 30–100 | Attention and information processing |
 
-### Gamma and the binaural-beat percept
+These associations are general descriptions, not effects that listening to a sound is proven to produce.
 
-Gamma is an EEG category; a 30 Hz or larger difference between the two tones is often not heard as a clear binaural beat. The recommended range for a clearly heard beat is roughly **1–30 Hz**. The Gamma band still spans 30–100 Hz, but any beat above 30 Hz is an **experimental high-difference mode** that must be enabled with a checkbox before Play works. Nothing here promises a gamma brain state.
+### Gamma and high beat frequencies
 
-## Audio calculation
+A high EEG gamma frequency is not the same thing as a clearly perceived binaural beat. Differences above roughly 30 Hz may not be perceived as a distinct binaural beat by many listeners. NeuroWave treats beat differences above 30 Hz as an experimental high-difference mode that requires explicit enabling. This does not mean the audio induces a gamma brain state.
 
-- Left channel = carrier frequency (default 200 Hz, adjustable 100–500 Hz).
-- Right channel = carrier + target beat frequency.
-- Beat = right - left. Beats below about 20 Hz aren't heard as tones, so each beat is the difference between two audible sine tones.
-- Two oscillators go through separate gains and analysers into a `ChannelMerger` (input 0 = left, input 1 = right), then a master gain. They are never mixed to mono.
-- Fade-in 1.5 s, fade-out 0.8 s. Volume, beat and carrier changes ramp smoothly during playback.
+## How the audio works
 
-## Files
+- The left channel plays the carrier tone.
+- The right channel plays the carrier tone plus the selected beat difference.
+- The perceived beat frequency is the difference between the right and left channel frequencies.
+- Separate oscillators, gain nodes, and analysers feed a stereo `ChannelMerger`; the channels are not intentionally mixed to mono.
+- Playback uses short fade-in and fade-out ramps. Volume and frequency adjustments are ramped smoothly.
 
-- `index.html`: interface and visualizations.
-- `engine.js`: band data, audio graph, frequency measurement, and the playback `Session` state machine (shared by the page and the tests).
-- `tests/engine.test.js`: automated tests. `tests/ui-smoke.js`: DOM smoke test.
+**Use stereo headphones.** Speakers or mono playback may mix the two channels and reduce the intended effect.
 
-## Testing
+## Project structure
+
+- `index.html` — interface and visualizations.
+- `engine.js` — frequency-band data, Web Audio graph, playback session logic, and audio measurements.
+- `tests/engine.test.js` — automated engine tests.
+- `tests/ui-smoke.js` — DOM smoke test.
+- `render.yaml` — Render Blueprint configuration for publishing the static site.
+- `.github/workflows/ci.yml` — GitHub Actions workflow for automated checks.
+
+## Tests
+
+Install the project dependencies and run:
 
 ```bash
-npm install
-npm test          # 18 tests
-npm run test:ui   # DOM smoke test (jsdom)
+npm ci
+npm test
+npm run test:ui
 ```
 
-- **Frequency tests** render each band's minimum, midpoint and maximum beat with `OfflineAudioContext` (from `node-web-audio-api`) at carriers of 100, 200 and 500 Hz, 4 s each. Each channel's frequency is measured from interpolated zero crossings. Tolerance: 0.02 Hz on left, right and difference.
-- **Isolation tests** mute one oscillator and check the opposite output channel is silent.
-- **Lifecycle tests** run the `Session` against a fake AudioContext and fake clock: Play/Pause/Resume/Stop, fades, live volume/beat/carrier changes, timer expiry, band switches, rapid Play/Stop, blocked autoplay, interruptions, Gamma gating, timers and context cleanup.
-- **In a browser:** open the page, expand "Testing instructions and self-test" and press **Run self-test**. This runs the same frequency check using that browser's own audio engine.
-- **By ear:** Alpha, 10 Hz, 200 Hz carrier, stereo headphones. One ear alone gives a steady tone; both ears give a slow pulsing. Swapping the headphones swaps the tones.
+The test suite includes frequency calculations, channel-isolation checks, playback lifecycle scenarios, and a DOM smoke test. The Node-based audio tests use `node-web-audio-api`; they do not replace listening tests in real browsers.
 
-## Limitations
+You can also open the page, expand **Testing instructions and self-test**, and select **Run self-test** to test the audio engine available in your browser.
 
-- Node tests use `node-web-audio-api`, not a browser engine, and the lifecycle and DOM tests use fakes. Real audio output, autoplay policy and iOS interruption behavior need manual checking in each browser.
-- Parameter ramps assume `AudioParam.value` reflects the current value mid-ramp, which holds in current Chrome and Firefox; Safari wasn't verified.
-- The beat envelope graph is calculated from the beat frequency, not measured from the audio.
-- Whether a given listener perceives a binaural beat varies, especially at higher beat frequencies.
+### Current verification limits
+
+- Browser audio output, autoplay behavior, mobile interruptions, and Safari behavior should be checked manually on target devices.
+- Automated tests using simulated contexts or DOM environments cannot fully reproduce every browser's audio behavior.
+- Perception of binaural beats varies by listener, especially at higher beat frequencies.
+
+## Deploy on Render
+
+The repository includes a root-level `render.yaml` Blueprint for a static site named `neurowave`.
+
+1. Push the repository to GitHub.
+2. In Render, choose **New + → Blueprint** and connect `RISHABH12005/NeuroWave`.
+3. Select the `main` branch and set **Blueprint Path** to `render.yaml`.
+4. Deploy the Blueprint and open the service URL provided by Render.
+
+The configuration publishes the repository root as static files. A successful GitHub commit or Blueprint setup alone does not guarantee the deployment or tests have succeeded; check the latest Render deployment and GitHub Actions run for their actual status.
 
 ## Safety
 
-Use stereo headphones; the effect needs a different tone in each ear. Keep the volume low and comfortable. Don't listen while driving or doing anything that needs your full attention. Stop if you feel unwell.
+- Use stereo headphones at a low, comfortable volume.
+- Stop playback if you experience discomfort.
+- Do not listen while driving or doing tasks that require full attention.
+- Do not use NeuroWave as a substitute for medical advice or treatment.
 
 ## License
 
-See `LICENSE`.
+MIT — see [LICENSE](LICENSE).
