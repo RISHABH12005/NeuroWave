@@ -1,7 +1,7 @@
 'use strict';
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const E = require('../engine.js');
+const E = require('../public/engine.js');
 
 /* ---------- Part 1: real audio rendering (node-web-audio-api's OfflineAudioContext) ---------- */
 const { OfflineAudioContext } = require('node-web-audio-api');
