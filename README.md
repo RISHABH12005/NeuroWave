@@ -28,7 +28,7 @@ python3 -m http.server 8000
 npm start
 ```
 
-Open [http://localhost:8000](http://localhost:8000). Keep `index.html` and `engine.js` in the same directory. Press **Play** to start audio; browsers generally require a user gesture before audio can play.
+Open [http://localhost:8000](http://localhost:8000). The app files are in `public/`; the local server serves that directory at the site root. Press **Play** to start audio; browsers generally require a user gesture before audio can play.
 
 On Windows, if `python3` is unavailable, try `py -m http.server 8000`.
 
@@ -62,8 +62,8 @@ A high EEG gamma frequency is not the same thing as a clearly perceived binaural
 
 ## Project structure
 
-- `index.html` — interface and visualizations.
-- `engine.js` — frequency-band data, Web Audio graph, playback session logic, and audio measurements.
+- `public/index.html` — interface and visualizations.
+- `public/engine.js` — frequency-band data, Web Audio graph, playback session logic, and audio measurements.
 - `tests/engine.test.js` — automated engine tests.
 - `tests/ui-smoke.js` — DOM smoke test.
 - `render.yaml` — Render Blueprint configuration for publishing the static site.
@@ -98,7 +98,7 @@ The repository includes a root-level `render.yaml` Blueprint for a static site n
 3. Select the `main` branch and set **Blueprint Path** to `render.yaml`.
 4. Deploy the Blueprint and open the service URL provided by Render.
 
-The configuration publishes the repository root as static files. A successful GitHub commit or Blueprint setup alone does not guarantee the deployment or tests have succeeded; check the latest Render deployment and GitHub Actions run for their actual status.
+The configuration publishes the `public/` directory as static files. A successful GitHub commit or Blueprint setup alone does not guarantee the deployment or tests have succeeded; check the latest Render deployment and GitHub Actions run for their actual status.
 
 ## Safety
 
