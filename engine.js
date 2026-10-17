@@ -87,7 +87,7 @@
     this.onChange = o.onChange || noop; this.onError = o.onError || noop;
     this.state = 'idle'; this.gen = 0; this.ctx = null; this.nodes = null;
     this.band = bandById('alpha'); this.beat = this.band.def; this.carrier = CARRIER.def;
-    this.volume = 25; this.duration = 900; this.experimental = false;
+    this.volume = 25; this.duration = 0; this.experimental = false;
     this.elapsed = 0; this._last = 0; this._tick = null; this._to = null; this._fadeEnd = 0; this._resuming = false;
   }
   var P = Session.prototype;
