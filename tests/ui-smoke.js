@@ -1,5 +1,5 @@
 const { JSDOM, VirtualConsole } = require('jsdom');
-const path = require('path').join(__dirname,'..','index.html');
+const path = require('path').join(__dirname,'..','public','index.html');
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 (async () => {
   const errs = [], vc = new VirtualConsole(); vc.on('jsdomError', (e) => { if (!/stylesheet|Could not load|getContext|Not implemented/.test(String(e.message))) errs.push(e.message); });
